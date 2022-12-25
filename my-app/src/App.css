@@ -1,0 +1,14 @@
+:root {
+  --transition: all 500ms ease;
+  --color-info: #d1c3cd;
+  --color-info-hover: #961313;
+  --color-info-disable: #d06767;
+  --color-dark: #343a40;
+  --color-dark-hover: #23272b;
+  --color-dark-disable: #7a7e83;
+}
+
+body {
+  background-color: var(--color-dark-hover);
+  color: white;
+}

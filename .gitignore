@@ -1,0 +1,4 @@
+/.env
+/car_service.session.sql
+/node_modules
+/package-lock.json

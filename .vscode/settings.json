@@ -1,0 +1,16 @@
+{
+  "sqltools.connections": [
+    {
+      "pgOptions": {
+        "ssl": true
+      },
+      "previewLimit": 50,
+      "server": "localhost",
+      "port": 5432,
+      "askForPassword": true,
+      "driver": "PostgreSQL",
+      "connectString": "postgres://car_service_center_nfmo_user:zUX4hgnSLL5MYm680ibsthv3wDyJJdCb@dpg-ce27i6ta4996ndulk1q0-a.frankfurt-postgres.render.com/car_service_center_nfmo",
+      "name": "car_service"
+    }
+  ]
+}
