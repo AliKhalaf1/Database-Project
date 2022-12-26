@@ -193,4 +193,23 @@ Router.post("/purchase", async (req, res, next) => {
     next(err);
   }
 });
+Router.get("/purchase/history/:id", async (req, res, next) => {
+  try {
+    const centers = await Service.getAllPurchaseReceipt(req.params.id);
+    res.json(centers);
+  } catch (error) {
+    next(error);
+  }
+});
+Router.post("/purchase/details/:id", async (req, res, next) => {
+  try {
+    const centers = await Service.getAllPurchaseDetails(
+      req.params.id,
+      req.body
+    );
+    res.json(centers);
+  } catch (error) {
+    next(error);
+  }
+});
 module.exports = Router;

@@ -255,12 +255,13 @@ const addPurchaseReceipt = async (data) => {
     let cDate = date.rows[0].now;
     console.log(cDate);
     const insertPurchaseReceiptQuery =
-      "INSERT INTO purchase_receipt (manufacturer_email, cost,date)" +
-      "VALUES ($1,$2, $3);";
+      "INSERT INTO purchase_receipt (manufacturer_email, cost,date,service_center_id)" +
+      "VALUES ($1,$2, $3,$4);";
     await connect.query(insertPurchaseReceiptQuery, [
       data.email,
       data.totalPrice,
       cDate,
+      data.serviceCenterId,
     ]);
     for (let i = 0; i < data.selectedParts.length; i++) {
       let insertintoPartsBoughtQuery =
@@ -310,6 +311,43 @@ const addPurchaseReceipt = async (data) => {
     connect.release();
   }
 };
+
+const getAllPurchaseReceipt = async (service_center_id) => {
+  try {
+    const connect = await db.connect();
+    const sql = `SELECT manufacturer_email,date,cost,name from purchase_receipt,manufacturer WHERE service_center_id = ${service_center_id} and manufacturer_email =email;`;
+    const result = await connect.query(sql);
+    connect.release();
+
+    return result.rows;
+  } catch (err) {
+    throw new Error(`Unable to get service center:${err.message}`);
+  }
+};
+const getAllPurchaseDetails = async (service_center_id, data) => {
+  try {
+    console.log(data.date);
+    data.date = new Date(data.date);
+    console.log(data.date);
+    const connect = await db.connect();
+    const sql =
+      "select parts_id,name,count,parts_bought.cost,date,receipt_date,receipt_manufacturer_email " +
+      "from parts_bought,purchase_receipt,parts " +
+      "where service_center_id=$1 and parts_bought.receipt_manufacturer_email=$2 " +
+      "and parts_bought.receipt_date=$3 " +
+      "and parts.id=parts_id;";
+    const result = await connect.query(sql, [
+      service_center_id,
+      data.manufacturer_email,
+      data.date,
+    ]);
+    console.log(result.rows);
+    connect.release();
+    return result.rows;
+  } catch (err) {
+    throw new Error(`Unable to get service center:${err.message}`);
+  }
+};
 module.exports = {
   getAllManagers,
   getAllMechanics,
@@ -329,4 +367,6 @@ module.exports = {
   getServiceCenterById,
   getAllParts,
   addPurchaseReceipt,
+  getAllPurchaseReceipt,
+  getAllPurchaseDetails,
 };
