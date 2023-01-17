@@ -247,9 +247,6 @@ const getServiceCenterById = async (service_center_id) => {
 const addPurchaseReceipt = async (data) => {
   const connect = await db.connect();
   try {
-    console.log(data.serviceCenterId);
-    console.log(data.selectedParts[0].id);
-    console.log(data.selectedParts.length);
     await connect.query("BEGIN");
     const date = await connect.query("SELECT NOW()");
     let cDate = date.rows[0].now;
@@ -331,16 +328,89 @@ const getAllPurchaseDetails = async (service_center_id, data) => {
     console.log(data.date);
     const connect = await db.connect();
     const sql =
-      "select parts_id,name,count,parts_bought.cost,date,receipt_date,receipt_manufacturer_email " +
+      "SELECT DISTINCT parts_id,name,count,parts_bought.cost,date,receipt_date,receipt_manufacturer_email " +
       "from parts_bought,purchase_receipt,parts " +
       "where service_center_id=$1 and parts_bought.receipt_manufacturer_email=$2 " +
       "and parts_bought.receipt_date=$3 " +
-      "and parts.id=parts_id;";
+      "and parts.id=parts_id ;";
     const result = await connect.query(sql, [
       service_center_id,
       data.manufacturer_email,
       data.date,
     ]);
+    console.log(result.rows);
+    connect.release();
+    return result.rows;
+  } catch (err) {
+    throw new Error(`Unable to get service center:${err.message}`);
+  }
+};
+const getJobsStastics = async (serviceCenterId) => {
+  const connect = await db.connect();
+  try {
+    await connect.query("BEGIN");
+    const insertPurchaseReceiptQuery =
+      "SELECT COUNT(*) FROM JOB,MECHANIC WHERE MECHANIC.service_center_id=$1 AND MECHANIC.SSN=JOB.mechanic_ssn AND STATUS ILIKE('%DONE%');";
+    const job = await connect.query(insertPurchaseReceiptQuery, [
+      serviceCenterId,
+    ]);
+    const insertPurchaseReceiptQuer =
+      "SELECT COUNT(*) FROM JOB,MECHANIC WHERE MECHANIC.service_center_id=$1 AND MECHANIC.SSN=JOB.mechanic_ssn AND JOB.STATUS ILIKE('%DELAYED%');";
+    const jo = await connect.query(insertPurchaseReceiptQuer, [
+      serviceCenterId,
+    ]);
+    const insertPurchaseReceiptQue =
+      "SELECT COUNT(*) FROM JOB,MECHANIC WHERE MECHANIC.service_center_id=$1 AND MECHANIC.SSN=JOB.mechanic_ssn AND JOB.STATUS ILIKE ('%PENDING%');";
+    const j = await connect.query(insertPurchaseReceiptQue, [serviceCenterId]);
+    await connect.query("COMMIT");
+    const stat = {
+      pending: job.rows[0].count,
+      done: jo.rows[0].count,
+      delayed: j.rows[0].count,
+    };
+    return stat;
+  } catch (e) {
+    console.log("rollingBack");
+    await connect.query("ROLLBACK");
+    throw e;
+  } finally {
+    console.log("releasing");
+    connect.release();
+  }
+};
+
+const getPartsUsedStatistics = async (service_center_id) => {
+  try {
+    const connect = await db.connect();
+    const sql =
+      "SELECT DISTINCT COUNT,STOCK_PARTS_ID,NAME FROM PARTS_USED,PARTS WHERE stock_service_center_id=$1 AND PARTS.ID=PARTS_USED.stock_parts_id ORDER BY COUNT DESC;";
+    const result = await connect.query(sql, [service_center_id]);
+    console.log(result.rows);
+    connect.release();
+    return result.rows;
+  } catch (err) {
+    throw new Error(`Unable to get service center:${err.message}`);
+  }
+};
+const getMostRequestedParts = async (service_center_id) => {
+  try {
+    const connect = await db.connect();
+    const sql =
+      "SELECT DISTINCT NAME,QUANTITY FROM REQUESTED_PARTS,PARTS  WHERE REQUESTED_PARTS.parts_id=PARTS.ID AND SERVICE_CENTER_ID=$1 ORDER BY QUANTITY;";
+    const result = await connect.query(sql, [service_center_id]);
+    console.log(result.rows);
+    connect.release();
+    return result.rows;
+  } catch (err) {
+    throw new Error(`Unable to get service center:${err.message}`);
+  }
+};
+const getManufacturerStatistics = async (service_center_id) => {
+  try {
+    const connect = await db.connect();
+    const sql =
+      "SELECT manufacturer_email,NAME, COUNT(*)  FROM purchase_receipt,manufacturer WHERE SERVICE_CENTER_ID=$1  AND manufacturer.EMAIL=manufacturer_email GROUP BY manufacturer_email,NAME";
+    const result = await connect.query(sql, [service_center_id]);
     console.log(result.rows);
     connect.release();
     return result.rows;
@@ -369,4 +439,8 @@ module.exports = {
   addPurchaseReceipt,
   getAllPurchaseReceipt,
   getAllPurchaseDetails,
+  getJobsStastics,
+  getPartsUsedStatistics,
+  getMostRequestedParts,
+  getManufacturerStatistics,
 };

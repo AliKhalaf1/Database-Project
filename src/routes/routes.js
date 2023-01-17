@@ -212,4 +212,40 @@ Router.post("/purchase/details/:id", async (req, res, next) => {
     next(error);
   }
 });
+Router.get("/statistics/job/:id", async (req, res, next) => {
+  console.log("a");
+  try {
+    const centers = await Service.getJobsStastics(req.params.id);
+    res.json(centers);
+  } catch (error) {
+    next(error);
+  }
+});
+Router.get("/statistics/parts/:id", async (req, res, next) => {
+  console.log("a");
+  try {
+    const centers = await Service.getPartsUsedStatistics(req.params.id);
+    res.json(centers);
+  } catch (error) {
+    next(error);
+  }
+});
+Router.get("/statistics/parts_requested/:id", async (req, res, next) => {
+  console.log("a");
+  try {
+    const centers = await Service.getMostRequestedParts(req.params.id);
+    res.json(centers);
+  } catch (error) {
+    next(error);
+  }
+});
+Router.get("/statistics/manufacturer/:id", async (req, res, next) => {
+  console.log("a");
+  try {
+    const centers = await Service.getManufacturerStatistics(req.params.id);
+    res.json(centers);
+  } catch (error) {
+    next(error);
+  }
+});
 module.exports = Router;
